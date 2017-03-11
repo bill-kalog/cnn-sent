@@ -23,14 +23,14 @@ config = {
     # 'train_embeddings': [False, True, True, True, True, None],
     # 'train_embeddings': [False, True, True, None],
     # 'train_embeddings': [False, True, None],  # , True]
-    'train_embeddings': [False, True],
+    'train_embeddings': [False, True, True],
     # 'train_embeddings': [True],
     'dropout_rate': 0.7,
     # 'val_split': 0.4,
     'edim': 300,  # dimension of word embeddings
     'n_words': None,  # Leave as None, dictionary size
-    # 'std_dev': 0.05,
-    'std_dev': 0.01,  # variance
+    'std_dev': 0.05,
+    # 'std_dev': 0.01,  # variance
     'sentence_len': None,  # max sentence length
     'n_filters': 100,
     'batch_size': 128,
@@ -54,7 +54,7 @@ config = {
     # 'word_vector_type': ["W2V", "W2V"],
     # 'word_vector_type': ['glove', 'glove', 'fastText', 'W2V', 'levy'],
     # 'word_vector_type': ["W2V"],
-    'word_vector_type': ['glove'],
+    # 'word_vector_type': ['glove'],
     # 'word_vector_type': [],  # use only random vectors
 
     # 'pretrained_vectors': ['../datasets/glove_42B/glove.42B.300d.txt']
@@ -68,8 +68,8 @@ config = {
     # 'pretrained_vectors': ['../datasets/fastText/wiki.en.vec',
     #                        '../datasets/fastText/wiki.en.vec'],
 
-    'pretrained_vectors': ['../datasets/glove_6B/glove.6B.100d.txt',
-                           '../datasets/glove_6B/glove.6B.100d.txt'],
+    # 'pretrained_vectors': ['../datasets/glove_6B/glove.6B.100d.txt',
+    #                        '../datasets/glove_6B/glove.6B.100d.txt'],
 
     # 'pretrained_vectors': [
     #     '../datasets/w2vec/GoogleNews-vectors-negative300.bin',
@@ -85,7 +85,7 @@ config = {
     #                        '.bin',
     #                        '../datasets/levy/bow5.words'],
 
-    'pretrained_vectors': ['../datasets/glove_6B/glove.6B.300d.txt'],
+    # 'pretrained_vectors': ['../datasets/glove_6B/glove.6B.300d.txt'],
     # 'pretrained_vectors': [
     #     '../datasets/w2vec/GoogleNews-vectors-negative300.bin'],
 

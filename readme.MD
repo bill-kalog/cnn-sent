@@ -12,7 +12,8 @@ use several pretrained vectors, load a few different datasets and choose
 between using the same filter during convolutions for all 
 word embedding channels or a seperate one. Finally, provides cross validation 
 splits for the datasets used (although, cross validation is not explicitely
-implemented)
+implemented). At the moment when assesing on a dev/test set all words that didn't
+exist in training set are considered unknown, even when using pretrained vectors...
 
 ## Requirements
 
@@ -32,6 +33,13 @@ or else the program is going to crash.
 Currently there is no possibility to download automatically the
 supported datasets or/and word vectors. So, one must download and point to them
 
+## Tensorboard
+
+There is a possibility to check variables/embeddings in tesorboard too
+(although not so well implemented) just run
+`tensorboard --logdir ./runs/`
+
+if your current directory is pointing to the code folder. 
 
 ## Supported datasets
 - [Stanford Sentiment Treebank](http://nlp.stanford.edu/sentiment/index.html) both binary and finegrained.

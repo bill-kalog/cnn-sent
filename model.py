@@ -24,23 +24,19 @@ class CNN(object):
         # Keeping track of l2 regularization loss
         self.l2_loss = tf.constant(0.0)
 
-        # declare actual graph
-        if config['seperate_filters']:
-            self.make_graph_pret(config)
-        else:
-            self.make_graph(config)
+        self.make_graph(config)
 
     def make_graph(self, config):
-        with tf.name_scope("word_embeddings"):
-            print(" ============  Word vector shape {}  ======".format(
-                self.word_vectors.shape))
-            if self.word_vectors is None:
-                self.word_embedding = tf.Variable(
-                    tf.random_normal(
-                        [self.n_words, self.edim],
-                        stddev=self.std_dev), name="W0"
-                )
-            else:
+
+        pooled_outputs = []
+        self.conv_loss = 0
+
+        if not config['seperate_filters']:
+
+            with tf.name_scope("word_embeddings"):
+                print(" ============  Word vector shape {}  ======".format(
+                    self.word_vectors.shape))
+
                 self.word_embeddings = []
                 all_embeddings = []
                 # counter = 0
@@ -57,85 +53,42 @@ class CNN(object):
                     temp = tf.nn.embedding_lookup(
                         extracted_emb, self.x)
                     all_embeddings.append(temp)
-                    # counter += 1
-
             self.embedded_chars = tf.stack(all_embeddings, axis=3)
 
             print ("emb_char shape: {}".format(self.embedded_chars.shape))
 
-        pooled_outputs = []
-        self.conv_loss = 0
-        for i, kernel_size in enumerate(self.kernel_sizes):
-            with tf.name_scope("conv-maxpool-%s" % kernel_size):
-                # declare conv layer
-                filter_shape = [kernel_size, self.edim,
-                                len(all_embeddings), self.n_filters]
-                W = tf.Variable(tf.truncated_normal(
-                    filter_shape, stddev=0.01), trainable=True,
-                    name="W")
-                b = tf.Variable(tf.constant(
-                    0.1, shape=[self.n_filters]), trainable=True,
-                    name="b")
-                conv = tf.nn.conv2d(
-                    self.embedded_chars,
-                    W, strides=[1, 1, 1, 1], padding="VALID", name="conv")
-                # declare non linearity
-                h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
-                self.conv_loss += tf.nn.l2_loss(W)
-                # Max pool relu output
-                pool = tf.nn.max_pool(
-                    h, ksize=[1, self.sentence_len - kernel_size + 1, 1, 1],
-                    strides=[1, 1, 1, 1], padding="VALID", name="pool")
-                pooled_outputs.append(pool)
+            for i, kernel_size in enumerate(self.kernel_sizes):
+                with tf.name_scope("conv-maxpool-%s" % kernel_size):
+                    # declare conv layer
+                    filter_shape = [kernel_size, self.edim,
+                                    len(all_embeddings), self.n_filters]
+                    W = tf.Variable(tf.truncated_normal(
+                        filter_shape, stddev=0.01), trainable=True,
+                        name="W")
+                    b = tf.Variable(tf.constant(
+                        0.1, shape=[self.n_filters]), trainable=True,
+                        name="b")
+                    conv = tf.nn.conv2d(
+                        self.embedded_chars,
+                        W, strides=[1, 1, 1, 1], padding="VALID", name="conv")
+                    # declare non linearity
+                    h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
+                    self.conv_loss += tf.nn.l2_loss(W)
+                    # Max pool relu output
+                    pool = tf.nn.max_pool(
+                        h, ksize=[1, self.sentence_len - kernel_size + 1, 1, 1],
+                        strides=[1, 1, 1, 1], padding="VALID", name="pool")
+                    pooled_outputs.append(pool)
 
-        # Combine all the pooled features
-        total_filters_num = self.n_filters * len(self.kernel_sizes)
-        # self.h_pool = tf.concat(3, pooled_outputs) #old version
-        self.h_pool = tf.concat(pooled_outputs, 3)
-        self.h_pool_flat = tf.reshape(self.h_pool, [-1, total_filters_num])
+            # Combine all the pooled features
+            total_filters_num = self.n_filters * len(self.kernel_sizes)
+            # self.h_pool = tf.concat(3, pooled_outputs) #old version
+            # self.h_pool = tf.concat(pooled_outputs, 3)
+            # self.h_pool_flat = tf.reshape(self.h_pool, [-1, total_filters_num])
 
-        # use dropout before fc layer
-        with tf.name_scope("drop-out"):
-            self.h_drop = tf.nn.dropout(self.h_pool_flat, self.dropout_prob)
-
-        # build fc layer
-        with tf.name_scope("output"):
-            self.fully_con_W = tf.Variable(tf.truncated_normal(
-                [total_filters_num, self.num_classes], stddev=0.1),
-                name="W_fc")
-            b = tf.Variable(tf.constant(
-                0.1, shape=[self.num_classes]), name="b")
-            self.l2_loss = tf.nn.l2_loss(self.fully_con_W)
-            # self.l2_loss += self.conv_loss
-            # self.l2_loss += tf.nn.l2_loss(b)
-            self.scores = tf.nn.xw_plus_b(
-                self.h_drop, self.fully_con_W, b, name="scores")
-            self.predictions = tf.argmax(self.scores, 1, name="predictions")
-
-        # Calculate mean cross-entropy loss
-        with tf.name_scope("loss"):
-            losses = tf.nn.softmax_cross_entropy_with_logits(
-                logits=self.scores, labels=self.y)
-            self.loss = tf.reduce_mean(losses) + self.l2_loss * self.l2_reg
-
-        # Calculate Accuracy
-        with tf.name_scope("accuracy"):
-            correct_pred = tf.equal(self.predictions, tf.argmax(self.y, 1))
-            self.accuracy = tf.reduce_mean(
-                tf.cast(correct_pred, "float"), name="accuracy")
-
-    def make_graph_pret(self, config):
-        """ CNN using seperate filters for each embedding matrix """
-        with tf.name_scope("word_embeddings"):
-            print(" ==================  Word vector shape {}  ======".format(self.word_vectors.shape))
-            if self.word_vectors is None:
-                self.word_embedding = tf.Variable(
-                    tf.random_normal(
-                        [self.n_words, self.edim],
-                        stddev=self.std_dev), name="W0"
-                )
-            else:
-
+        else:  # use seperate filters
+            with tf.name_scope("word_embeddings"):
+                print(" ==================  Word vector shape {}  ======".format(self.word_vectors.shape))
                 self.word_embeddings = []
                 all_embeddings = []
                 for index_ in range(self.word_vectors.shape[0]):
@@ -154,38 +107,37 @@ class CNN(object):
                         temp, -1)
                     all_embeddings.append(embedded_chars_expanded)
 
-        pooled_outputs = []
-        self.conv_loss = 0
-        for index_, embedded_char_matrix in enumerate(all_embeddings):
-            for i, kernel_size in enumerate(self.kernel_sizes):
-                with tf.name_scope("conv-maxpool-{}-{}".format(
-                        kernel_size, index_)):
-                    # declare conv layer
-                    filter_shape = [kernel_size, self.edim,
-                                    1, self.n_filters]
-                    W = tf.Variable(tf.truncated_normal(
-                        filter_shape, stddev=0.01), trainable=True,
-                        name="W")
-                    b = tf.Variable(tf.constant(
-                        0.01, shape=[self.n_filters]), trainable=True,
-                        name="b")
-                    conv = tf.nn.conv2d(
-                        embedded_char_matrix,
-                        # test_stop_grad,
-                        W, strides=[1, 1, 1, 1], padding="VALID", name="conv")
-                    # declare non linearity
-                    h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
-                    # self.conv_loss += tf.nn.l2_loss(W)
-                    # Max pool relu output
-                    pool = tf.nn.max_pool(
-                        h, ksize=[1, self.sentence_len - kernel_size + 1, 1, 1],
-                        strides=[1, 1, 1, 1], padding="VALID", name="pool")
-                    pooled_outputs.append(pool)
+            for index_, embedded_char_matrix in enumerate(all_embeddings):
+                for i, kernel_size in enumerate(self.kernel_sizes):
+                    with tf.name_scope("conv-maxpool-{}-{}".format(
+                            kernel_size, index_)):
+                        # declare conv layer
+                        filter_shape = [kernel_size, self.edim,
+                                        1, self.n_filters]
+                        W = tf.Variable(tf.truncated_normal(
+                            filter_shape, stddev=0.01), trainable=True,
+                            name="W")
+                        b = tf.Variable(tf.constant(
+                            0.01, shape=[self.n_filters]), trainable=True,
+                            name="b")
+                        conv = tf.nn.conv2d(
+                            embedded_char_matrix,
+                            # test_stop_grad,
+                            W, strides=[1, 1, 1, 1], padding="VALID",
+                            name="conv")
+                        # declare non linearity
+                        h = tf.nn.relu(tf.nn.bias_add(conv, b), name="relu")
+                        # self.conv_loss += tf.nn.l2_loss(W)
+                        # Max pool relu output
+                        pool = tf.nn.max_pool(
+                            h, ksize=[1, self.sentence_len - kernel_size + 1, 1, 1],
+                            strides=[1, 1, 1, 1], padding="VALID", name="pool")
+                        pooled_outputs.append(pool)
 
-        # Combine all the pooled features
-        total_filters_num = self.n_filters * len(self.kernel_sizes) * \
-            len(all_embeddings)
-        # self.h_pool = tf.concat(3, pooled_outputs) #old version
+            # Combine all the pooled features
+            total_filters_num = self.n_filters * len(self.kernel_sizes) * \
+                len(all_embeddings)
+
         self.h_pool = tf.concat(pooled_outputs, 3)
         self.h_pool_flat = tf.reshape(self.h_pool, [-1, total_filters_num])
 
