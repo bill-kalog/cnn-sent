@@ -1,4 +1,3 @@
-
 import time
 import datetime
 import os
@@ -25,7 +24,9 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     vocab_processor = learn.preprocessing.VocabularyProcessor(
         max_document_length)
 
-    x_train = np.array(list(vocab_processor.fit_transform(dx_train)))
+    # vocab_processor.fit(dx_train + dx_dev)  # build vocabulary based on both train and dev set
+    vocab_processor.fit(dx_train)
+    x_train = np.array(list(vocab_processor.transform(dx_train)))
     x_dev = np.array(list(vocab_processor.transform(dx_dev)))
 
     # print (x_train[1])
@@ -141,7 +142,6 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     # Tensorflow assumes this directory already exists so we need to create it
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-    # saver = tf.train.Saver(tf.all_variables())
     saver = tf.train.Saver(tf.global_variables())
 
 
@@ -190,7 +190,7 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
         #                 if a_counter == 10:
         #                     break
 
-        if step == 1000:
+        if step == config['save_step']:
             # extracting embeddings info
             # https://github.com/normanheckscher/mnist-tensorboard-embeddings/blob/master/mnist_t-sne.py
             # http://stackoverflow.com/questions/40849116/how-to-use-tensorboard-embedding-projector/41370610#41370610
@@ -230,7 +230,6 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
                 out_dir, "summaries", 'embeddings_.ckpt'))
 
             print (len(vocabulary), len(word_embd))
-
 
     def dev_step(x_batch, y_batch, writer=None):
         """

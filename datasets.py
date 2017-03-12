@@ -51,7 +51,7 @@ class Dataset(object):
         self.labels_verbose = None
         self.dataset = []
 
-        parent_folder = os.path.join(config['emd_dat_directory'],
+        parent_folder = os.path.join(config['dat_directory'],
                                      'stanfordSentimentTreebank')
         dictionary_path = os.path.join(parent_folder, 'dictionary.txt')
         dictionary = {}
@@ -153,8 +153,8 @@ class Dataset(object):
         self.labels_verbose = None
         self.dataset = []
         # load training and test set
-        paths = [os.path.join(config['emd_dat_directory'], 'aclImdb', 'train'),
-                 os.path.join(config['emd_dat_directory'], 'aclImdb', 'test')]
+        paths = [os.path.join(config['dat_directory'], 'aclImdb', 'train'),
+                 os.path.join(config['dat_directory'], 'aclImdb', 'test')]
         for path in paths:
             for top, direc, f in os.walk(path):
                 if top[-3:] == "neg":  # reading negative reviews
@@ -196,7 +196,7 @@ class Dataset(object):
         https://www.cs.cornell.edu/people/pabo/movie-review-data/
         http://www.cs.cornell.edu/home/llee/papers/pang-lee-stars.home.html
         '''
-        parent_f = os.path.join(config['emd_dat_directory'], 'MR',
+        parent_f = os.path.join(config['dat_directory'], 'MR',
                                 'rt-polaritydata')
         path_pos = os.path.join(parent_f, 'rt-polarity.pos')
         path_neg = os.path.join(parent_f, 'rt-polarity.neg')

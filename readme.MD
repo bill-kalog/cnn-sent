@@ -1,6 +1,6 @@
 ## Convolutional Neural Networks for Sentiment Analysis
 
-a tensorflow implementation of paper [Convolutional Neural Networks for Sentence Classification](http://arxiv.org/abs/1408.5882)
+a tensorflow implementation of the paper [Convolutional Neural Networks for Sentence Classification](http://arxiv.org/abs/1408.5882)
 
 The code is highly based on :
 - [Yoon Kim](https://github.com/yoonkim) theano [implementation](https://github.com/yoonkim/CNN_sentence)
@@ -19,12 +19,13 @@ exist in training set are considered unknown, even when using pretrained vectors
 
 - Python 3
 - Tensorflow 1.0
+- numpy
 
 ## Running instructions
 
 - change arguments in `conf.py` according to needs 
 - replace/change code in `main.py` according to preference
-- run code using `python main.py`
+- run code using `$ python main.py`
 
 ## Configuration file
 
@@ -37,9 +38,9 @@ supported datasets or/and word vectors. So, one must download and point to them
 
 There is a possibility to check variables/embeddings in tesorboard too
 (although not so well implemented) just run
-`tensorboard --logdir ./runs/`
+`$ tensorboard --logdir ./runs/`
 
-if your current directory is pointing to the code folder. 
+if your current directory is the code folder. 
 
 ## Supported datasets
 - [Stanford Sentiment Treebank](http://nlp.stanford.edu/sentiment/index.html) both binary and finegrained.
