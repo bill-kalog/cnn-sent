@@ -31,7 +31,7 @@ class CNN(object):
         pooled_outputs = []
         self.conv_loss = 0
 
-        if not config['seperate_filters']:
+        if config['seperate_filters']:
 
             with tf.name_scope("word_embeddings"):
                 print(" ============  Word vector shape {}  ======".format(
@@ -86,7 +86,7 @@ class CNN(object):
             # self.h_pool = tf.concat(pooled_outputs, 3)
             # self.h_pool_flat = tf.reshape(self.h_pool, [-1, total_filters_num])
 
-        else:  # use seperate filters
+        else:  # use the same filters
             with tf.name_scope("word_embeddings"):
                 print(" ==================  Word vector shape {}  ======".format(self.word_vectors.shape))
                 self.word_embeddings = []
@@ -107,22 +107,22 @@ class CNN(object):
                         temp, -1)
                     all_embeddings.append(embedded_chars_expanded)
 
-            for index_, embedded_char_matrix in enumerate(all_embeddings):
-                for i, kernel_size in enumerate(self.kernel_sizes):
-                    with tf.name_scope("conv-maxpool-{}-{}".format(
-                            kernel_size, index_)):
-                        # declare conv layer
-                        filter_shape = [kernel_size, self.edim,
-                                        1, self.n_filters]
-                        W = tf.Variable(tf.truncated_normal(
-                            filter_shape, stddev=0.01), trainable=True,
-                            name="W")
-                        b = tf.Variable(tf.constant(
-                            0.01, shape=[self.n_filters]), trainable=True,
-                            name="b")
+            # for index_, embedded_char_matrix in enumerate(all_embeddings):
+            for i, kernel_size in enumerate(self.kernel_sizes):
+                with tf.name_scope("conv-maxpool-{}-{}".format(
+                        kernel_size, index_)):
+                    # declare conv layer
+                    filter_shape = [kernel_size, self.edim,
+                                    1, self.n_filters]
+                    W = tf.Variable(tf.truncated_normal(
+                        filter_shape, stddev=0.01), trainable=True,
+                        name="W")
+                    b = tf.Variable(tf.constant(
+                        0.01, shape=[self.n_filters]), trainable=True,
+                        name="b")
+                    for index_, embedded_char_matrix in enumerate(all_embeddings):
                         conv = tf.nn.conv2d(
                             embedded_char_matrix,
-                            # test_stop_grad,
                             W, strides=[1, 1, 1, 1], padding="VALID",
                             name="conv")
                         # declare non linearity

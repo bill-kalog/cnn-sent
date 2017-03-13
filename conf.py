@@ -3,8 +3,8 @@ config = {
 
     #  # # dataset to load arguments
     'dat_directory': '../datasets',  # parent directory where a dataset is stored
-    'sst_finegrained': False,  # used only when/if loading SST choose [5, 2] classes
-    'classes_num': 2,  # number of classes
+    'sst_finegrained': True,  # used only when/if loading SST choose [5, 2] classes
+    'classes_num': 5,  # number of classes
 
 
     # # # network architecture specific arguments
@@ -25,15 +25,17 @@ config = {
     # 'train_embeddings': [False, True, True, None],
     # 'train_embeddings': [False, True, None],  # , True]
     'train_embeddings': [False, True, None],
-    'train_embeddings': [True],
+    # 'train_embeddings': [True],
     'dropout_rate': 0.7,
-    # 'val_split': 0.4,
+    'learning_rate': 1e-3,
+    # 'learning_rate': 1e-4,
+    # 'learning_rate': 1e-5,
     'edim': 300,  # dimension of word embeddings
     'n_words': None,  # Leave as None, dictionary size
     # 'std_dev': 0.05,
     'std_dev': 0.01,  # variance
     'sentence_len': None,  # max sentence length
-    'n_filters': 100,
+    'n_filters': 100,  # number of filters per kernel
     'batch_size': 128,
     'l2_regularization': 3,  # weight of l2 regularizer
     'evaluate_every': 5,  # evaluate on dev set
@@ -56,7 +58,7 @@ config = {
     # 'word_vector_type': ['glove', 'glove', 'fastText', 'W2V', 'levy'],
     # 'word_vector_type': ["W2V"],
     # 'word_vector_type': ['glove'],
-    'word_vector_type': [],  # use only random vectors
+    # 'word_vector_type': [],  # use only random vectors
 
     # 'pretrained_vectors': ['../datasets/glove_42B/glove.42B.300d.txt']
     'pretrained_vectors': ['../datasets/fastText/wiki.en.vec',
@@ -90,6 +92,6 @@ config = {
     # 'pretrained_vectors': [
     #     '../datasets/w2vec/GoogleNews-vectors-negative300.bin'],
 
-    'pretrained_vectors': []  # use only random vectors
+    # 'pretrained_vectors': []  # use only random vectors
 
 }

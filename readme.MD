@@ -38,6 +38,7 @@ supported datasets or/and word vectors. So, one must download and point to them
 
 There is a possibility to check variables/embeddings in tesorboard too
 (although not so well implemented) just run
+
 `$ tensorboard --logdir ./runs/`
 
 if your current directory is the code folder. 
