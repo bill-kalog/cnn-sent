@@ -6,7 +6,8 @@ import train
 import sys
 
 
-dataset = Dataset("SST")
+# dataset = Dataset("SST")
+dataset = Dataset("SST_phrase")
 # dataset = Dataset("IMDB", preprocess=True)
 # dataset = Dataset("MR", preprocess=True)
 
@@ -21,9 +22,17 @@ for index, type_ in enumerate(config['word_vector_type']):
 
 # data = dataset.cv_split(index=5)
 
-data = dataset.cv_split(index=2)
+# data = dataset.cv_split(index=2)
 # # data = dataset.cv_split(index=5)
 
+# SST splits
+# 1 = train
+# 2 = test
+# 3 = dev
+t1 = dataset.cv_split(index=2)
+# t1 = dataset.cv_split(index=3)
+t2 = dataset.cv_split(index=1)
+data = [t2[2], t2[3], t1[2], t1[3]]
 
 # dataset_1 = Dataset("MR", preprocess=True)
 # sp_1 = dataset_1.cv_split(index=5)

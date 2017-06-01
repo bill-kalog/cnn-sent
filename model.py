@@ -135,11 +135,11 @@ class CNN(object):
                         pooled_outputs.append(pool)
 
             # Combine all the pooled features
-            total_filters_num = self.n_filters * len(self.kernel_sizes) * \
-                len(all_embeddings)
+            total_filters_num = self.n_filters * len(self.kernel_sizes) * len(all_embeddings)
 
         self.h_pool = tf.concat(pooled_outputs, 3)
         self.h_pool_flat = tf.reshape(self.h_pool, [-1, total_filters_num])
+        print ("sent emb {}".format(self.h_pool_flat))
 
         # use dropout before fc layer
         with tf.name_scope("drop-out"):
@@ -158,6 +158,7 @@ class CNN(object):
             self.scores = tf.nn.xw_plus_b(
                 self.h_drop, self.fully_con_W, b, name="scores")
             self.predictions = tf.argmax(self.scores, 1, name="predictions")
+            self.probs = tf.nn.softmax(self.scores)
 
         # Calculate mean cross-entropy loss
         with tf.name_scope("loss"):
@@ -167,6 +168,7 @@ class CNN(object):
 
         # Calculate Accuracy
         with tf.name_scope("accuracy"):
-            correct_pred = tf.equal(self.predictions, tf.argmax(self.y, 1))
+            self.true_predictions = tf.argmax(self.y, 1)
+            correct_pred = tf.equal(self.predictions, self.true_predictions)
             self.accuracy = tf.reduce_mean(
                 tf.cast(correct_pred, "float"), name="accuracy")

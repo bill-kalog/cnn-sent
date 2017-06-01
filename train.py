@@ -24,8 +24,8 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     vocab_processor = learn.preprocessing.VocabularyProcessor(
         max_document_length)
 
-    # vocab_processor.fit(dx_train + dx_dev)  # build vocabulary based on both train and dev set
-    vocab_processor.fit(dx_train)
+    vocab_processor.fit(dx_train + dx_dev)  # build vocabulary based on both train and dev set
+    # vocab_processor.fit(dx_train)
     x_train = np.array(list(vocab_processor.transform(dx_train)))
     x_dev = np.array(list(vocab_processor.transform(dx_dev)))
 
@@ -142,6 +142,11 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     # Tensorflow assumes this directory already exists so we need to create it
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
+    # Checkpointing
+    sent_dir = os.path.abspath(os.path.join(out_dir, "sent_representations"))
+    # Tensorflow assumes this directory already exists so we need to create it
+    if not os.path.exists(sent_dir):
+        os.makedirs(sent_dir)
     saver = tf.train.Saver(tf.global_variables())
 
 
@@ -249,6 +254,34 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
         if writer:
             writer.add_summary(summaries, step)
 
+    def save_dev_summary(x_batch, y_batch, x_strings_batch, name_):
+        '''
+        save info for a batch in order to plot in
+        bokeh later
+        '''
+        path_ = os.path.join(sent_dir, name_)
+        y_net = []
+        prob_net = []
+        layer = []
+        true_labels = []
+        feed_dict = {
+            network.x: x_batch,
+            network.y: y_batch,
+            network.dropout_prob: 1.0
+
+        }
+        output_ = [network.predictions, network.true_predictions,
+                   network.probs, network.h_pool_flat]
+        predictions, true_pred, probs, fc_layer = sess.run(
+            output_, feed_dict)
+        prob_net = probs.tolist()
+        layer = fc_layer.tolist()
+        y_net = predictions.tolist()
+        true_labels = true_pred.tolist()
+
+        process_utils.save_info(
+            x_strings_batch, true_labels, y_net, prob_net, layer, path_)
+
     # Generate batches
     print ("About to build batches for x:{} with number of words".format(
         len(x_train), config['n_words']))
@@ -268,6 +301,12 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
             print("\nEvaluation:")
             dev_step(x_dev, y_dev, writer=dev_summary_writer)
             print("")
+            save_dev_summary(
+                x_dev, y_dev, dx_dev,
+                "metrics_step_{}.pkl".format(current_step))
+            save_dev_summary(
+                x_train, y_train, dx_train,
+                "metrics_train_step_{}.pkl".format(current_step))
         if current_step % config['checkpoint_every'] == 0:
             path = saver.save(
                 sess, checkpoint_prefix, global_step=current_step)
