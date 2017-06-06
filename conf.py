@@ -3,8 +3,11 @@ config = {
 
     #  # # dataset to load arguments
     'dat_directory': '../datasets',  # parent directory where a dataset is stored
+    "load_last_checkpoint": "./runs/1496770766/best_snaps",
     'sst_finegrained': False,  # used only when/if loading SST choose [5, 2] classes
     'classes_num': 2,  # number of classes
+
+    'eval': True,
 
 
     # # # network architecture specific arguments
@@ -25,7 +28,7 @@ config = {
     # 'train_embeddings': [False, True, True, None],
     # 'train_embeddings': [False, True, None],  # , True]
     'train_embeddings': [False, True, None],
-    'train_embeddings': [True, None],
+    # 'train_embeddings': [True, None],
     'dropout_rate': 0.5,
     'learning_rate': 1e-3,
     'learning_rate': 1e-4,
@@ -40,14 +43,14 @@ config = {
     'l2_regularization': 0,  # weight of l2 regularizer
     'evaluate_every': 1,  # evaluate on dev set
     'checkpoint_every': 200,  # strore a checkpoint
-    'num_checkpoints': 20,
+    'num_checkpoints': 20,  # not used currently
 
 
     # # # pretrained networks arguments
     # type of each pretrained word vector to be loaded (based on
     # values available/implemented inside word_vectors classs)
     # leave these two lists empty when not using pretrained embeddings
-    # 'word_vector_type': ['glove', 'glove'],
+    'word_vector_type': ['glove', 'glove'],
     # 'word_vector_type': ['fastText', 'fastText', 'glove'],
     # 'word_vector_type': ['glove', 'glove'],
     # 'word_vector_type': ['levy', 'levy'],
@@ -55,16 +58,16 @@ config = {
     # 'word_vector_type': ["W2V", "W2V"],
     # 'word_vector_type': ['glove', 'glove', 'fastText', 'W2V', 'levy'],
     # 'word_vector_type': ["W2V"],
-    'word_vector_type': ['glove'],
+    # 'word_vector_type': ['glove'],
     # 'word_vector_type': [],  # use only random vectors
 
-    'pretrained_vectors': ['../datasets/glove_6B/glove.6B.300d.txt']
+    # 'pretrained_vectors': ['../datasets/glove_6B/glove.6B.300d.txt']
     # 'pretrained_vectors': ['../datasets/fastText/wiki.en.vec',
     #                        '../datasets/fastText/wiki.en.vec',
     #                        '../datasets/glove_6B/glove.6B.300d.txt'],
 
-    # 'pretrained_vectors': ['../datasets/glove_6B/glove.6B.300d.txt',
-    #                        '../datasets/glove_6B/glove.6B.300d.txt'],
+    'pretrained_vectors': ['../datasets/glove_6B/glove.6B.300d.txt',
+                           '../datasets/glove_6B/glove.6B.300d.txt'],
 
     # 'pretrained_vectors': ['../datasets/fastText/wiki.en.vec',
     #                        '../datasets/fastText/wiki.en.vec'],

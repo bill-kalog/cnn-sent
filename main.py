@@ -3,11 +3,12 @@ from conf import config
 from datasets import Dataset
 from word_vectors import WordVectors
 import train
+import evaluate
 import sys
 
 
-dataset = Dataset("SST")
-# dataset = Dataset("SST_phrase")
+# dataset = Dataset("SST")
+dataset = Dataset("SST_phrase")
 # dataset = Dataset("IMDB", preprocess=True)
 # dataset = Dataset("MR", preprocess=True)
 
@@ -55,10 +56,24 @@ data = [t2[2], t2[3], t1[2], t1[3]]
 # print (len(data[0]), len(data[2]), len(data[1]), len(data[3]))
 
 
+# # init and run tf graph
+# with tf.Graph().as_default():
+#     sess = tf.Session()
+#     with sess.as_default():
+#         train.set_train(
+#             sess, config, data,
+#             pretrained_vectors)
+
 # init and run tf graph
-with tf.Graph().as_default():
+g = tf.Graph()
+with g.as_default():
     sess = tf.Session()
     with sess.as_default():
-        train.set_train(
-            sess, config, data,
-            pretrained_vectors)
+        if config['eval']:
+            evaluate.eval_model(
+                sess, g, config["load_last_checkpoint"], data, config,
+            )
+        else:
+            train.set_train(
+                sess, config, data,
+                pretrained_embeddings=pretrained_vectors)

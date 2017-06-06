@@ -154,7 +154,7 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     if not os.path.exists(sent_dir):
         os.makedirs(sent_dir)
         os.makedirs(best_models_dir)
-    saver = tf.train.Saver(tf.global_variables())
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=None)
 
     # Write vocabulary
     vocab_processor.save(os.path.join(out_dir, "vocabulary"))
