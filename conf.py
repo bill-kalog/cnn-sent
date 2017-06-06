@@ -38,9 +38,9 @@ config = {
     'n_filters': 100,  # number of filters per kernel
     'batch_size': 128,
     'l2_regularization': 0,  # weight of l2 regularizer
-    'evaluate_every': 5,  # evaluate on dev set
+    'evaluate_every': 1,  # evaluate on dev set
     'checkpoint_every': 200,  # strore a checkpoint
-    'num_checkpoints': 5,
+    'num_checkpoints': 20,
 
 
     # # # pretrained networks arguments

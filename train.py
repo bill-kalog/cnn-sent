@@ -13,6 +13,10 @@ import json
 
 
 def set_train(sess, config, data, pretrained_embeddings=[]):
+    best_achieved_accuracy = 0  # best achieved vlaidation accuracy
+    epochs_best_acc_not_changed = 0  # number of epochs that the best accuracy hasn't improved
+    candidate_accuracy = 0  # accuracy at current step
+
     # Build vocabulary
     # x_train, y_train, x_dev, y_dev = data
     dx_train, y_train, dx_dev, y_dev = data
@@ -139,6 +143,8 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     # Checkpointing
     checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
     checkpoint_prefix = os.path.join(checkpoint_dir, "model")
+    best_models_dir = os.path.abspath(os.path.join(out_dir, "best_snaps"))
+    best_models_prefix = os.path.join(best_models_dir, "model")
     # Tensorflow assumes this directory already exists so we need to create it
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
@@ -147,8 +153,11 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
     # Tensorflow assumes this directory already exists so we need to create it
     if not os.path.exists(sent_dir):
         os.makedirs(sent_dir)
+        os.makedirs(best_models_dir)
     saver = tf.train.Saver(tf.global_variables())
 
+    # Write vocabulary
+    vocab_processor.save(os.path.join(out_dir, "vocabulary"))
 
     sess.run(tf.global_variables_initializer())
     # tf.get_default_graph().finalize()
@@ -251,6 +260,8 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
         time_str = datetime.datetime.now().isoformat()
         print("{}: step {}, loss {:g}, acc {:g}".format(
             time_str, step, loss, accuracy))
+        global candidate_accuracy
+        candidate_accuracy = accuracy
         if writer:
             writer.add_summary(summaries, step)
 
@@ -287,26 +298,54 @@ def set_train(sess, config, data, pretrained_embeddings=[]):
         len(x_train), config['n_words']))
     batches = process_utils.batch_iter(
         list(zip(x_train, y_train)), config['batch_size'], config['n_epochs'])
+    batches_per_epoc = int((len(x_train) - 1) / config['batch_size']) + 1
 
     conf_path = os.path.abspath(os.path.join(out_dir, "config.json"))
     json.dump(config, open(conf_path, 'w'), indent="\t")
     print("Saved configuration file at: {}".format(conf_path))
 
     print ("train loop starting for every batch")
+    global candidate_accuracy
+    global best_achieved_accuracy
+    global epochs_best_acc_not_changed
     for batch in batches:
         x_batch, y_batch = zip(*batch)
         train_step(x_batch, y_batch)
         current_step = tf.train.global_step(sess, global_step)
+        burn_in_period = batches_per_epoc * 0.5
+        print (
+            "burn_in_period {}, mod_calc {}, cand_acc {}, b_acc {}, iter {},"
+            "ep_not changed {}".format(
+                burn_in_period, current_step % config['evaluate_every'],
+                candidate_accuracy, best_achieved_accuracy, current_step,
+                epochs_best_acc_not_changed))
+        if current_step % batches_per_epoc == 0:
+            epochs_best_acc_not_changed += 1
+        if current_step > burn_in_period and current_step % config['evaluate_every'] == 0:
+            if candidate_accuracy > best_achieved_accuracy:
+                best_achieved_accuracy = candidate_accuracy
+                print ("---- New best vlidation accuracy acheived !! -----")
+                epochs_best_acc_not_changed = 0
+                saver.save(sess, best_models_prefix, global_step=current_step)
+            if epochs_best_acc_not_changed > 21:
+                print (
+                    "early stopping, model hasn't improved for 20 epochs..."
+                    "best achieved validation accuracy {}".format(
+                        best_achieved_accuracy))
+                break
+
         if current_step % config['evaluate_every'] == 0:
             print("\nEvaluation:")
             dev_step(x_dev, y_dev, writer=dev_summary_writer)
             print("")
-            save_dev_summary(
-                x_dev, y_dev, dx_dev,
-                "metrics_step_{}.pkl".format(current_step))
-            save_dev_summary(
-                x_train, y_train, dx_train,
-                "metrics_train_step_{}.pkl".format(current_step))
+            # evalute only every 250 steps if possible
+            if current_step % 250 == 0:
+                save_dev_summary(
+                    x_dev, y_dev, dx_dev,
+                    "metrics_step_{}.pkl".format(current_step))
+            # save_dev_summary(
+            #     x_train, y_train, dx_train,
+            #     "metrics_train_step_{}.pkl".format(current_step))
         if current_step % config['checkpoint_every'] == 0:
             path = saver.save(
                 sess, checkpoint_prefix, global_step=current_step)

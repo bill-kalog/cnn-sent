@@ -6,8 +6,8 @@ import train
 import sys
 
 
-# dataset = Dataset("SST")
-dataset = Dataset("SST_phrase")
+dataset = Dataset("SST")
+# dataset = Dataset("SST_phrase")
 # dataset = Dataset("IMDB", preprocess=True)
 # dataset = Dataset("MR", preprocess=True)
 
